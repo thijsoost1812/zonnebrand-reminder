@@ -27,36 +27,31 @@ jobs:
           echo "Max UV vandaag: $MAX_UV"
           echo "Max neerslag vandaag: ${MAX_RAIN}mm/u"
 
-          # Zonnebrand-melding bij UV >= 6
-          if python3 -c "import sys; sys.exit(0 if float('$MAX_UV') >= 6 else 1)"; then
-            printf "Date: $(date -R)\r\nFrom: ${SMTP_USER}\r\nTo: ${SMTP_USER}\r\nSubject: Zonnebrand nodig vandaag! UV-index: ${MAX_UV}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nGoedemorgen!\r\n\r\nVandaag wordt de maximale UV-index in Groningen ${MAX_UV}.\r\nVergeet niet om zonnebrand op te doen voor je naar buiten gaat!\r\n\r\nSPF 30 of hoger wordt aangeraden bij UV 6+.\r\n\r\nFijne dag!\r\n" > /tmp/email_uv.txt
+          UV_HOOG=$(python3 -c "import sys; sys.exit(0 if float('$MAX_UV') >= 6 else 1)" && echo "ja" || echo "nee")
+          REGEN=$(python3 -c "import sys; sys.exit(0 if float('$MAX_RAIN') >= 2 else 1)" && echo "ja" || echo "nee")
 
-            curl --url "smtp://smtp.protonmail.ch:587" \
-              --ssl-reqd \
-              --user "${SMTP_USER}:${SMTP_TOKEN}" \
-              --mail-from "${SMTP_USER}" \
-              --mail-rcpt "${SMTP_USER}" \
-              --upload-file /tmp/email_uv.txt \
-              --silent --show-error
-
-            echo "Zonnebrand e-mail verstuurd!"
+          if [ "$UV_HOOG" = "ja" ] && [ "$REGEN" = "ja" ]; then
+            ONDERWERP="Zonnebrand én paraplu nodig vandaag!"
+            INHOUD="Goedemorgen!\n\nVandaag is er van alles aan de hand in Groningen:\n\n☀️  UV-index: ${MAX_UV} — vergeet je zonnebrand niet (SPF 30+).\n🌧️  Regen verwacht: max ${MAX_RAIN}mm per uur — neem een paraplu mee!\n\nFijne dag!"
+          elif [ "$UV_HOOG" = "ja" ]; then
+            ONDERWERP="Zonnebrand nodig vandaag! UV-index: ${MAX_UV}"
+            INHOUD="Goedemorgen!\n\nVandaag wordt de maximale UV-index in Groningen ${MAX_UV}.\nVergeet niet om zonnebrand op te doen voor je naar buiten gaat!\n\nSPF 30 of hoger wordt aangeraden bij UV 6+.\n\nFijne dag!"
+          elif [ "$REGEN" = "ja" ]; then
+            ONDERWERP="Neem een paraplu mee vandaag!"
+            INHOUD="Goedemorgen!\n\nVandaag wordt er echte regen verwacht in Groningen (max ${MAX_RAIN}mm per uur).\nVergeet je paraplu niet!\n\nFijne dag!"
           else
-            echo "Geen zonnebrand-melding nodig (UV te laag)."
+            echo "Geen meldingen nodig vandaag."
+            exit 0
           fi
 
-          # Paraplu-melding bij neerslag >= 2mm/u
-          if python3 -c "import sys; sys.exit(0 if float('$MAX_RAIN') >= 2 else 1)"; then
-            printf "Date: $(date -R)\r\nFrom: ${SMTP_USER}\r\nTo: ${SMTP_USER}\r\nSubject: Neem een paraplu mee vandaag! Regen verwacht in Groningen\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nGoedemorgen!\r\n\r\nVandaag wordt er echte regen verwacht in Groningen (max ${MAX_RAIN}mm per uur).\r\nVergeet je paraplu niet!\r\n\r\nFijne dag!\r\n" > /tmp/email_regen.txt
+          printf "Date: $(date -R)\r\nFrom: ${SMTP_USER}\r\nTo: ${SMTP_USER}\r\nSubject: ${ONDERWERP}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n$(printf "$INHOUD")\r\n" > /tmp/email.txt
 
-            curl --url "smtp://smtp.protonmail.ch:587" \
-              --ssl-reqd \
-              --user "${SMTP_USER}:${SMTP_TOKEN}" \
-              --mail-from "${SMTP_USER}" \
-              --mail-rcpt "${SMTP_USER}" \
-              --upload-file /tmp/email_regen.txt \
-              --silent --show-error
+          curl --url "smtp://smtp.protonmail.ch:587" \
+            --ssl-reqd \
+            --user "${SMTP_USER}:${SMTP_TOKEN}" \
+            --mail-from "${SMTP_USER}" \
+            --mail-rcpt "${SMTP_USER}" \
+            --upload-file /tmp/email.txt \
+            --silent --show-error
 
-            echo "Paraplu e-mail verstuurd!"
-          else
-            echo "Geen paraplu-melding nodig (geen zware regen verwacht)."
-          fi
+          echo "E-mail verstuurd: ${ONDERWERP}"
