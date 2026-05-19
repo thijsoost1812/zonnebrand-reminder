@@ -32,13 +32,13 @@ jobs:
 
           if [ "$UV_HOOG" = "ja" ] && [ "$REGEN" = "ja" ]; then
             ONDERWERP="Zonnebrand én paraplu nodig vandaag!"
-            INHOUD="Goedemorgen!\n\nVandaag is er van alles aan de hand in Groningen:\n\n☀️  UV-index: ${MAX_UV} — vergeet je zonnebrand niet (SPF 30+).\n🌧️  Regen verwacht: max ${MAX_RAIN}mm per uur — neem een paraplu mee!\n\nFijne dag!"
+            INHOUD="Goedemorgen, Thijs!\n\nVandaag is er van alles aan de hand in Groningen:\n\n☀️  UV-index: ${MAX_UV} — vergeet je zonnebrand niet (SPF 30+).\n🌧️  Regen verwacht: max ${MAX_RAIN}mm per uur — neem een paraplu mee!\n\nFijne dag!"
           elif [ "$UV_HOOG" = "ja" ]; then
             ONDERWERP="Zonnebrand nodig vandaag! UV-index: ${MAX_UV}"
-            INHOUD="Goedemorgen!\n\nVandaag wordt de maximale UV-index in Groningen ${MAX_UV}.\nVergeet niet om zonnebrand op te doen voor je naar buiten gaat!\n\nSPF 30 of hoger wordt aangeraden bij UV 6+.\n\nFijne dag!"
+            INHOUD="Goedemorgen, Thijs!\n\nVandaag wordt de maximale UV-index in Groningen ${MAX_UV}.\nVergeet niet om zonnebrand op te doen voor je naar buiten gaat!\n\nSPF 30 of hoger wordt aangeraden bij UV 6+.\n\nFijne dag!"
           elif [ "$REGEN" = "ja" ]; then
             ONDERWERP="Neem een paraplu mee vandaag!"
-            INHOUD="Goedemorgen!\n\nVandaag wordt er echte regen verwacht in Groningen (max ${MAX_RAIN}mm per uur).\nVergeet je paraplu niet!\n\nFijne dag!"
+            INHOUD="Goedemorgen, Thijs!\n\nVandaag wordt er echte regen verwacht in Groningen (max ${MAX_RAIN}mm per uur).\nVergeet je paraplu niet!\n\nFijne dag!"
           else
             echo "Geen meldingen nodig vandaag."
             exit 0
