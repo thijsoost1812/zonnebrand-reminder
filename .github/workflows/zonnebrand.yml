@@ -1,0 +1,54 @@
+name: Zonnebrand Check
+
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 07:30 CEST (zomertijd, UTC+2)
+  workflow_dispatch:        # handmatig starten via GitHub-knop
+
+jobs:
+  check-uv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Controleer UV-index en stuur e-mail
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_TOKEN: ${{ secrets.SMTP_TOKEN }}
+        run: |
+          TODAY=$(TZ=Europe/Amsterdam date +%Y-%m-%d)
+
+          RESPONSE=$(curl -s \
+            "https://api.open-meteo.com/v1/forecast?latitude=53.2194&longitude=6.5665&hourly=uv_index&timezone=Europe%2FAmsterdam&forecast_days=1")
+
+          MAX_UV=$(python3 - <<EOF
+import json, sys
+data = json.loads("""$RESPONSE""")
+today = "$TODAY"
+max_uv = 0.0
+for i, t in enumerate(data["hourly"]["time"]):
+    if t.startswith(today):
+        hour = int(t[11:13])
+        uv = data["hourly"]["uv_index"][i] or 0
+        if 8 <= hour <= 19 and uv > max_uv:
+            max_uv = uv
+print(round(max_uv, 1))
+EOF
+)
+
+          echo "Maximale UV-index vandaag: $MAX_UV"
+
+          if python3 -c "import sys; sys.exit(0 if float('$MAX_UV') >= 6 else 1)"; then
+            printf "Date: $(date -R)\r\nFrom: ${SMTP_USER}\r\nTo: ${SMTP_USER}\r\nSubject: Zonnebrand nodig vandaag! UV-index: ${MAX_UV}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nGoedemorgen!\r\n\r\nVandaag wordt de maximale UV-index in Groningen ${MAX_UV}.\r\nVergeet niet om zonnebrand op te doen voor je naar buiten gaat!\r\n\r\nSPF 30 of hoger wordt aangeraden bij UV 6+.\r\n\r\nFijne dag!\r\n" \
+              > /tmp/email.txt
+
+            curl --url "smtp://smtp.protonmail.ch:587" \
+              --ssl-reqd \
+              --user "${SMTP_USER}:${SMTP_TOKEN}" \
+              --mail-from "${SMTP_USER}" \
+              --mail-rcpt "${SMTP_USER}" \
+              --upload-file /tmp/email.txt \
+              --silent --show-error
+
+            echo "E-mail verstuurd!"
+          else
+            echo "Geen melding nodig (UV te laag)."
+          fi
