@@ -2,7 +2,7 @@ name: Zonnebrand en Regen Check
 
 on:
   schedule:
-    - cron: '30 5 * * *'
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 jobs:
