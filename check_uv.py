@@ -8,12 +8,16 @@ with open('/tmp/uv_response.json') as f:
 max_uv = 0.0
 max_rain = 0.0
 
+print(f"DEBUG datum: {today}", file=sys.stderr)
+print("DEBUG uurlijkse UV-waarden:", file=sys.stderr)
+
 for i, t in enumerate(data['hourly']['time']):
     if t.startswith(today):
         hour = int(t[11:13])
+        uv = data['hourly']['uv_index'][i] or 0
+        rain = data['hourly']['precipitation'][i] or 0
+        print(f"  {t}  UV={uv}  regen={rain}mm", file=sys.stderr)
         if 8 <= hour <= 19:
-            uv = data['hourly']['uv_index'][i] or 0
-            rain = data['hourly']['precipitation'][i] or 0
             if uv > max_uv:
                 max_uv = uv
             if rain > max_rain:
