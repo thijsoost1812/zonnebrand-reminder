@@ -16,7 +16,7 @@ jobs:
         run: |
           TODAY=$(TZ=Europe/Amsterdam date +%Y-%m-%d)
 
-          curl -s "https://api.open-meteo.com/v1/forecast?latitude=53.2194&longitude=6.5665&hourly=uv_index,precipitation&timezone=Europe%2FAmsterdam&forecast_days=1" > /tmp/uv_response.json
+          curl -s "https://api.open-meteo.com/v1/forecast?latitude=53.2194&longitude=6.5665&hourly=uv_index,uv_index_clear_sky,precipitation&timezone=Europe%2FAmsterdam&forecast_days=1" > /tmp/uv_response.json
 
           RESULT=$(python3 check_uv.py "$TODAY")
           MAX_UV=$(echo "$RESULT" | sed -n '1p')

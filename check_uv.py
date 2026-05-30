@@ -16,7 +16,8 @@ for i, t in enumerate(data['hourly']['time']):
         hour = int(t[11:13])
         uv = data['hourly']['uv_index'][i] or 0
         rain = data['hourly']['precipitation'][i] or 0
-        print(f"  {t}  UV={uv}  regen={rain}mm", file=sys.stderr)
+        uv_clear = data['hourly']['uv_index_clear_sky'][i] or 0
+        print(f"  {t}  UV={uv}  UV_helder={uv_clear}  regen={rain}mm", file=sys.stderr)
         if 8 <= hour <= 19:
             if uv > max_uv:
                 max_uv = uv
